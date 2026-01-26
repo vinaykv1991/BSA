@@ -1,160 +1,129 @@
-# Bank Statement Analyzer
+# AI Financial Planner & Expense Tracker
 
-This application processes bank statement files (PDF, CSV, Excel) to extract transaction data, categorize earnings and spendings, and generate financial summaries and visualizations. It aims to provide insights into financial habits by automatically parsing statements and presenting the information in an understandable format.
+An automated financial memory and planning engine built with FastAPI. This application automatically extracts expenses from various sources (SMS, PDFs, CSVs), categorizes them using a hybrid AI approach, and provides real-time budgeting and "safe-to-spend" insights.
 
-## Features
+## 🚀 Key Features
 
-- **Multiple File Format Support**: Parses bank statements from PDF, CSV, and Excel (.xls, .xlsx) files.
-- **Robust PDF Parsing**: Utilizes `camelot-py` for table extraction from PDFs, with a text-based fallback using `PyPDF2`.
-- **Data Standardization**: Automatically identifies and standardizes key columns (Date, Description, Debit, Credit).
-- **Comprehensive Preprocessing**:
-    - Converts dates to a consistent datetime format.
-    - Cleans and converts monetary amounts to numeric types.
-    - Assigns transaction types (Earning/Spending).
-    - Extracts Year and Month for periodic analysis.
-- **Keyword-Based Categorization**: Assigns categories to transactions based on keywords found in their descriptions (e.g., "Salary", "Groceries", "Utilities"). Includes fallback to "Miscellaneous Earnings/Spendings".
-- **In-Memory Data Storage**: Maintains processed data in memory for the current session, including:
-    - Master lists of all earning and spending transactions.
-    - Monthly aggregated summaries of earnings and spendings by category.
-- **Text-Based Financial Summary**: Generates a detailed monthly financial overview in text format, showing total earnings, total spendings, category breakdowns, and net savings/loss.
-- **Visual Chart Generation**: Creates and saves a bar chart (`monthly_totals_bar_chart.png`) visualizing total monthly earnings versus total monthly spendings using `matplotlib`.
-- **User Feedback Simulation (Placeholder)**: Includes a placeholder mechanism to indicate where user feedback could be incorporated to refine transaction categories.
-- **Conceptual Persistence Plan**: Outlines a plan within the code comments for future implementation of data persistence (saving/loading analyzed data).
+- **Multi-Source Data Ingestion**:
+    - **SMS Parsing**: Robust regex-based extraction from bank notification messages (e.g., HDFC, generic formats).
+    - **PDF Statement Analysis**: Automated table extraction from bank PDF statements using `pdfplumber`.
+    - **CSV Import**: Support for standard bank CSV exports.
+- **Hybrid AI Categorization**:
+    - Rule-based engine for high-speed, predictable categorization.
+    - Modular design with placeholders for LLM-based fallback for unknown merchants.
+    - Automatic distinction between **Earnings** and **Spendings**.
+- **Dynamic Budgeting Engine**:
+    - Real-time "Safe-to-Spend" calculations based on monthly income and spending velocity.
+    - Category-wise budget tracking.
+- **Privacy & Security**:
+    - **Strict Data Isolation**: Every request is scoped to a specific `user_id`.
+    - **Timezone Awareness**: All financial data is standardized to UTC.
+- **Scalable Architecture**: Layered design (API, Services, Models, Schemas) for easy maintainability.
 
-## Setup Instructions
+## 🛠 Tech Stack
 
-### Prerequisites
+- **Backend**: Python 3.12+, FastAPI
+- **Database**: SQLAlchemy ORM (SQLite for dev, compatible with PostgreSQL)
+- **PDF Processing**: `pdfplumber`
+- **Validation**: Pydantic v2
+- **Testing**: Pytest, ReportLab (for mock statement generation)
+- **Deployment**: Uvicorn, Gunicorn, Docker
 
-- **Python**: Python 3.7 or higher is recommended.
-- **System Dependencies for PDF Parsing**:
-    - `camelot-py` (used for PDF table extraction) requires Ghostscript and Tkinter.
-        - **On Debian/Ubuntu**:
-          ```bash
-          sudo apt-get update
-          sudo apt-get install ghostscript python3-tk
-          ```
-        - **On macOS (using Homebrew)**:
-          ```bash
-          brew install ghostscript tcl-tk
-          ```
-        - **On Windows**:
-            - Install Ghostscript from [the official website](https://www.ghostscript.com/download/gsdnld.html). Ensure the installation directory's `bin` folder (containing `gswin64c.exe` or similar) is added to your system's PATH.
-            - Python for Windows usually comes with Tkinter. If not, you might need to reinstall Python ensuring Tk/Tcl is included.
-
-### Python Dependencies
-
-The application relies on several Python libraries. You can install them using pip:
-
-```bash
-pip install pandas camelot-py[cv] PyPDF2 openpyxl xlrd matplotlib reportlab
-```
-
-**Explanation of Libraries:**
-- `pandas`: For data manipulation and analysis, core to handling transaction DataFrames.
-- `camelot-py[cv]`: For robust table extraction from PDF files. The `[cv]` extra installs OpenCV, which is needed by Camelot for some PDF processing strategies.
-- `PyPDF2`: As a fallback PDF parser if Camelot fails, and for text-based extraction.
-- `openpyxl`: Required by pandas to read and write Excel 2007+ files (.xlsx).
-- `xlrd`: Required by pandas to read older Excel files (.xls).
-- `matplotlib`: For generating charts.
-- `reportlab`: Used in the test/example code to create dummy PDF files. While not strictly necessary for analyzing existing statements, it's included if you intend to run the full example script as is.
-
-## How to Use
-
-### 1. Prepare Your Bank Statements
-Ensure your bank statements are available in one of the supported formats (PDF, CSV, XLS, XLSX).
-
-### 2. Configure Input Files
-Currently, the application processes a predefined set of test files specified within the `statement_analyzer.py` script. To analyze your own bank statements, you'll need to modify the `test_scenarios` list in the `if __name__ == '__main__':` block at the end of `statement_analyzer.py`.
-
-**Example Modification:**
-Open `statement_analyzer.py` and find the section similar to this:
-```python
-if __name__ == '__main__':
-    # ... (dummy file creation logic might be present for testing) ...
-
-    # Modify this list to point to your actual bank statement files:
-    test_scenarios = [
-        "path/to/your/bank_statement_jan.pdf",
-        "path/to/your/bank_statement_feb.csv",
-        "path/to/your/another_statement.xlsx"
-        # Add more file paths as needed
-    ]
-
-    charts_output_directory = "generated_charts"
-    # ... (rest of the script) ...
-```
-Replace `"path/to/your/..."` with the actual paths to your statement files.
-
-### 3. Run the Analysis
-Execute the main script from your terminal:
-```bash
-python statement_analyzer.py
-```
-
-### 4. Review the Output
-The application will produce the following outputs:
-
-- **Console Output**:
-    - Logs detailing the processing steps for each file (parsing, preprocessing, categorization).
-    - A preview (head) of the master earnings and spendings transaction tables.
-    - The monthly earnings and spendings summary dictionaries (in JSON format).
-    - A formatted text-based "Monthly Financial Overview".
-    - Messages related to placeholder features (like the user feedback loop for categorization and other chart types).
-    - A confirmation message when the chart is saved.
-
-- **Generated Chart**:
-    - A bar chart image file named `monthly_totals_bar_chart.png` will be saved in the directory specified by `charts_output_directory` (default is `generated_charts/` relative to where you run the script). This chart visualizes total monthly earnings versus total spendings.
-
-### Important Notes:
-- **PDF Parsing**: The success of PDF parsing heavily depends on the structure and quality of the PDF file. `camelot-py` is powerful but may struggle with scanned PDFs or non-standard layouts. The text-based `PyPDF2` fallback is very basic.
-- **Categorization**: Transaction categorization is based on a predefined set of keywords. You can modify `DEFAULT_EARNINGS_KEYWORDS` and `DEFAULT_SPENDINGS_KEYWORDS` in `utils/categorizer.py` to better suit your specific transactions if needed. The placeholder for user feedback indicates a future direction for easier customization.
-
-## Project Structure
-
-The project is organized as follows:
+## 📂 Project Structure
 
 ```
 .
-├── statement_analyzer.py   # Main executable script, orchestrates the analysis pipeline.
-├── utils/                    # Directory for utility modules.
-│   ├── __init__.py           # Makes 'utils' a Python package.
-│   ├── pdf_parser.py         # Logic for parsing PDF files.
-│   ├── csv_parser.py         # Logic for parsing CSV files.
-│   ├── excel_parser.py       # Logic for parsing Excel files.
-│   ├── data_preprocessor.py  # Universal data cleaning and preprocessing.
-│   ├── categorizer.py        # Transaction categorization and feedback placeholder.
-│   ├── summary_generator.py  # Text-based monthly summary generation.
-│   └── chart_generator.py    # Chart generation (actual and placeholders).
-├── generated_charts/         # Default output directory for generated charts (e.g., monthly_totals_bar_chart.png).
-└── README.md                 # This documentation file.
+├── app/
+│   ├── api/            # FastAPI routes and dependency injection
+│   ├── models/         # SQLAlchemy database models
+│   ├── schemas/        # Pydantic models for validation
+│   ├── services/       # Business logic (Normalization, Categorization, Budgeting)
+│   ├── tests/          # Unit and integration tests
+│   ├── main.py         # Application entry point
+│   └── database.py     # DB connection and session management
+├── requirements.txt    # Project dependencies
+├── .gitignore          # Repository hygiene
+└── README.md           # Documentation
 ```
 
-- **`statement_analyzer.py`**: This is the entry point of the application. It handles the overall workflow, including file processing, calling utility functions for parsing, preprocessing, categorization, storage, summary generation, and chart requests.
-- **`utils/`**: This directory contains specialized modules, each responsible for a specific part of the analysis pipeline. This modular design helps in keeping the code organized and maintainable.
-    - **Parsers (`pdf_parser.py`, `csv_parser.py`, `excel_parser.py`)**: Handle the specifics of reading data from different file formats.
-    - **`data_preprocessor.py`**: Standardizes the raw data extracted by the parsers.
-    - **`categorizer.py`**: Implements the logic for assigning categories to transactions.
-    - **`summary_generator.py`**: Creates the formatted text overview of financial data.
-    - **`chart_generator.py`**: Responsible for creating visual charts from the data.
-- **`generated_charts/`**: This directory is created by the application (if it doesn't exist) to store any charts generated, such as the `monthly_totals_bar_chart.png`.
+## 💻 Local Setup
 
-## Future Enhancements
+1. **Clone the repository**:
+   ```bash
+   git clone <repo-url>
+   cd ai-financial-planner
+   ```
 
-This application provides a solid foundation for bank statement analysis. Potential future enhancements could include:
+2. **Create a virtual environment**:
+   ```bash
+   python -m venv venv
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   ```
 
-- **Interactive User Feedback Loop**: Fully implement the user feedback mechanism for transaction categorization, allowing users to correct miscategorizations and dynamically update keyword sets.
-- **Data Persistence**: Implement the conceptualized data persistence plan (e.g., using SQLite or Parquet/JSON files) to save and load analyzed data across sessions. This would allow for historical data accumulation and trend analysis over longer periods.
-- **Advanced Charting**:
-    - Implement more chart types (e.g., pie charts for category distribution, line charts for category trends over time).
-    - Allow users to interactively select chart types and parameters (e.g., specific months or categories).
-- **Command-Line Interface (CLI)**: Develop a proper CLI using libraries like `argparse` or `click` for easier file input, output directory specification, and control over application behavior without modifying the script directly.
-- **Graphical User Interface (GUI)**: Create a GUI (e.g., using Tkinter, PyQt, or a web framework like Flask/Django) for a more user-friendly experience.
-- **Improved PDF Parsing**: Enhance robustness for a wider variety of PDF layouts, possibly integrating OCR for scanned documents if `camelot-py` and `PyPDF2` are insufficient.
-- **Smarter Categorization**: Explore more advanced categorization techniques, potentially using machine learning (ML) for suggestions or automatic categorization based on past user choices.
-- **Budgeting Features**: Add functionality for setting budgets by category and tracking spending against them.
-- **Export Options**: Allow users to export processed data, summaries, or reports to formats like CSV or Excel.
-- **Configuration File**: Manage settings (like keyword lists, default paths) through an external configuration file.
+3. **Install dependencies**:
+   ```bash
+   pip install -r requirements.txt
+   ```
 
-## License
+4. **Run the application**:
+   ```bash
+   uvicorn app.main:app --reload
+   ```
+   The API will be available at `http://localhost:8000`. You can access the interactive Swagger docs at `http://localhost:8000/docs`.
 
-This project is licensed under the MIT License - see the `LICENSE.md` file for details (if one is created).
+5. **Run Tests**:
+   ```bash
+   python -m pytest
+   ```
+
+## 📡 API Endpoints (Quick Reference)
+
+| Method | Endpoint | Description |
+| :--- | :--- | :--- |
+| `POST` | `/users` | Create a new user with monthly income. |
+| `POST` | `/accounts` | Link a bank/credit card account to a user. |
+| `POST` | `/ingest` | Ingest raw data (SMS text, CSV rows, or base64 PDF). |
+| `GET` | `/users/{id}/transactions` | Retrieve user-specific categorized transactions. |
+| `GET` | `/users/{id}/summary` | Get monthly spending breakdown by category. |
+| `GET` | `/users/{id}/safe_to_spend` | Get real-time remaining budget for the month. |
+
+## 🚢 Deployment Guide
+
+### Option 1: Docker (Recommended)
+
+1. **Create a `Dockerfile`**:
+   ```dockerfile
+   FROM python:3.12-slim
+   WORKDIR /code
+   COPY ./requirements.txt /code/requirements.txt
+   RUN pip install --no-cache-dir --upgrade -r /code/requirements.txt
+   COPY ./app /code/app
+   CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "80"]
+   ```
+
+2. **Build and Run**:
+   ```bash
+   docker build -t finance-app .
+   docker run -d -p 80:80 finance-app
+   ```
+
+### Option 2: Production Server (Gunicorn)
+
+For production, it's recommended to use Gunicorn with Uvicorn workers:
+```bash
+pip install gunicorn
+gunicorn -w 4 -k uvicorn.workers.UvicornWorker app.main:app --bind 0.0.0.0:8000
+```
+
+### Database Persistence
+In production, swap the `SQLALCHEMY_DATABASE_URL` in `app/database.py` to point to a managed PostgreSQL instance:
+```python
+SQLALCHEMY_DATABASE_URL = "postgresql://user:password@postgresserver/db"
+```
+
+## 🛣 Future Roadmap
+
+- [ ] **Account Aggregator (AA) Integration**: Connect directly to bank APIs via Finvu/CAMS for real-time sync.
+- [ ] **LLM Merchant Interpretation**: Integrate OpenAI/Anthropic for smart classification of obscure merchants.
+- [ ] **Mobile App**: Flutter-based mobile dashboard.
+- [ ] **Forecasting**: Predictive burn-rate analysis based on historical trends.
